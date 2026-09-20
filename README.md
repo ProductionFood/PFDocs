@@ -29,6 +29,7 @@ docs/
 │   ├── 09-SETUP-ENTORNO.md           Puesta en marcha local paso a paso
 │   ├── 10-ROADMAP.md                 Orden de ejecución y dependencias entre HU
 │   ├── 11-DESPLIEGUE-AWS-RDS.md      Instancia MySQL 8.4, seguridad y costos
+│   ├── 12-FLOCI-USO.md               Emulador local de AWS para pruebas
 │   └── migraciones/                  Scripts SQL versionados
 │       ├── V1__esquema_base.sql          Esquema original adaptado a MySQL 8.4
 │       ├── V2__correcciones.sql          Correcciones, kardex, vistas, índices

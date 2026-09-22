@@ -49,7 +49,7 @@ INSERT INTO `unidades_medida` (`nombre`, `abreviatura`) VALUES
 INSERT INTO `usuarios` (`nombre`, `correo`, `password`, `estado`, `id_rol`) VALUES
   ('Administrador Inicial',
    'admin@productionfood.local',
-   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+   '$2a$10$oH1H.xBcj219Oay1y98Uv.W0kKpAbBfctm/3ZahhBl8g6pndoRUci',
    1,
    1);
 

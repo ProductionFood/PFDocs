@@ -24,21 +24,17 @@ en un equipo y no en otro.
 
 ## 2. Base de datos local
 
-Con Docker (recomendado — la versión queda fijada y no interfiere con otras instalaciones):
+Con Docker (recomendado — la versión queda fijada y no interfiere con otras instalaciones).
+El compose vive en el Backend y auto-carga su `.env` (§3):
 
 ```bash
-docker run --name productionfood-mysql \
-  -e MYSQL_ROOT_PASSWORD=local \
-  -e MYSQL_DATABASE=productionfood \
-  -e TZ=America/Bogota \
-  -p 3306:3306 \
-  -d mysql:8.4 \
-  --character-set-server=utf8mb4 \
-  --collation-server=utf8mb4_0900_ai_ci \
-  --default-time-zone=-05:00
+cd Backend
+docker compose up -d     # MySQL 8.4 + phpMyAdmin en http://localhost:8081
 ```
 
-Sin Docker: instalar MySQL 8.4 y crear la base:
+Requiere `Backend/.env` con `DB_NAME` y `DB_PASSWORD`. El servicio `mysql` crea la base
+`MYSQL_DATABASE` al levantar el volumen; **el esquema lo construye Flyway** al arrancar el
+backend (§2 *Migraciones*). Sin Docker: instalar MySQL 8.4 y crear la base a mano:
 
 ```sql
 CREATE DATABASE productionfood
@@ -52,17 +48,18 @@ pedidos registrados después de las 7 p.m. quedan con la fecha del día siguient
 
 ### Migraciones
 
-```bash
-cd docs/00-base/migraciones
-mysql -u root -p productionfood < V1__esquema_base.sql
-mysql -u root -p productionfood < V2__correcciones.sql
-mysql -u root -p productionfood < V3__datos_semilla.sql
-```
+El esquema **no se carga con SQL suelto**: el backend aplica sus migraciones de Flyway
+automáticamente al arrancar. Viven junto al código, en
+`Backend/src/main/resources/db/migration/` (`V1__esquema_base.sql`,
+`V2__correcciones.sql`, `V3__datos_semilla.sql`), y su historial queda en la tabla
+`flyway_schema_history`. `docs/00-base/migraciones/` queda como **guía de contenido**
+(modelo E/R y correcciones), no como mecanismo de carga.
 
-Verificación:
+Verificación (tras el primer arranque del backend):
 
 ```sql
-SELECT VERSION(), @@time_zone;              -- 8.4.x · -05:00
+SELECT version, description, success FROM productionfood.flyway_schema_history
+ ORDER BY installed_rank;             -- 3 filas: 1, 2, 3 — success = 1
 SELECT COUNT(*) FROM roles;                 -- 5
 SHOW TABLES LIKE 'movimientos_%';           -- 2 tablas
 ```
@@ -73,17 +70,20 @@ SHOW TABLES LIKE 'movimientos_%';           -- 2 tablas
 
 ```bash
 git clone <url-del-repositorio>
-cd productionfood/backend
+cd productionfood/Backend
 ```
 
 Variables de entorno. Crear `.env` local (**está en `.gitignore`**):
 
 ```bash
 export DB_HOST=localhost
+export DB_NAME=productionfood
 export DB_USER=root
 export DB_PASSWORD=local
 export JWT_SECRET=$(openssl rand -base64 48)
 ```
+
+El mismo `.env` alimenta el compose de §2 (`DB_NAME`, `DB_PASSWORD`) y la aplicación.
 
 ```bash
 source .env
@@ -103,8 +103,8 @@ curl -X POST http://localhost:8080/api/v1/auth/login \
      -d '{"correo":"admin@productionfood.local","password":"Admin123*"}'
 ```
 
-Debe devolver un token. Si devuelve `401`, la semilla V3 no se aplicó o el `PasswordEncoder`
-no es BCrypt.
+Debe devolver un token. Si devuelve `409 CREDENCIALES_INVALIDAS`, la semilla V3 no se
+aplicó, el `PasswordEncoder` no es BCrypt, o el usuario está inactivo.
 
 > ⚠️ **La contraseña `Admin123*` es pública**: está en el script de semilla, en este
 > repositorio. Sirve para arrancar en local. Antes de exponer la aplicación fuera de
@@ -145,7 +145,8 @@ Los tokens duran una hora; al expirar se vuelve a ejecutar esa carpeta.
 | Síntoma | Causa | Solución |
 |---|---|---|
 | `Communications link failure` al arrancar | MySQL no está corriendo o el puerto difiere | `docker ps` / revisar `DB_HOST` |
-| `Unknown database 'productionfood'` | La base no se creó | Ver §2 |
+| `Unknown database 'productionfood'` | El volumen se creó sin `MYSQL_DATABASE` | Recrear: `docker compose down -v` en `Backend` y `up -d` (§2) |
+| La app arranca sin crear `flyway_schema_history` | Falta el módulo `spring-boot-flyway` en el classpath (Boot 4) | Dependencia `spring-boot-flyway` en `pom.xml` del Backend |
 | `Access denied for user 'root'` | Contraseña incorrecta | Revisar `DB_PASSWORD` |
 | `WeakKeyException` de jjwt | `JWT_SECRET` con menos de 256 bits | Regenerar con `openssl rand -base64 48` |
 | Todos los endpoints responden `403` | Falta el token, o falta `@EnableMethodSecurity` | Ver `06-ARQUITECTURA-BACKEND.md` §2 |

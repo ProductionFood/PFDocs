@@ -103,7 +103,9 @@ Ver `00-base/10-ROADMAP.md` para el orden de ejecución sugerido y el grafo de d
    punto de sincronización: frontend puede trabajar contra mocks derivados de ese contrato.
 3. **QA valida contra `tarea-qa.md`, no contra la implementación.** Si la implementación
    difiere del contrato, es defecto aunque "funcione".
-4. **Toda corrección al esquema pasa por una migración versionada** en `00-base/migraciones/`.
-   Nadie toca la base de datos con SQL suelto.
+4. **Toda corrección al esquema pasa por una migración versionada de Flyway** en
+   `Backend/src/main/resources/db/migration/` (`Vn__descripcion.sql`); la aplicación la
+   aplica sola al arrancar. `00-base/migraciones/` queda como **guía de contenido**, no
+   como mecanismo de carga. Nadie toca la base de datos con SQL suelto.
 5. **Commits atómicos**: un commit por unidad lógica, bajo ~50 líneas. Un PR por HU o por
    capa de HU, bajo ~250 líneas.

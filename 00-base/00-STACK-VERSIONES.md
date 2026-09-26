@@ -66,7 +66,7 @@ es la única versión que no incurre en cargos de soporte extendido.
 | Capa | Tecnología | Versión |
 |---|---|---|
 | Framework | Angular | **22.x** |
-| Lenguaje | TypeScript | 5.9.x (la que fije Angular 22) |
+| Lenguaje | TypeScript | 6.0.x (la que fije Angular 22) |
 | UI | Angular Material | 22.x |
 | Node.js | Node | 22 LTS o 24 LTS |
 | Gestor de paquetes | npm | 10+ |

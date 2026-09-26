@@ -71,8 +71,8 @@ La preparación detectó tres cosas que conviene conocer antes de escribir códi
 | | [HU-03](HU-03/) | Inicio de sesión | HU-01 |
 | | [HU-04](HU-04/) | Bitácora de auditoría | HU-03 |
 | **2. Datos maestros** | [HU-05](HU-05/) | Gestión de clientes | HU-03, HU-04 |
-| | [HU-06](HU-06/) | Gestión de proveedores | HU-03, HU-04 |
-| | [HU-07](HU-07/) | Unidades de medida | HU-03, HU-04 |
+| | [HU-06](HU-06/) | Gestión de proveedores | HU-05 |
+| | [HU-07](HU-07/) | Unidades de medida | HU-03 |
 | **3. Inventario de materias primas** | [HU-08](HU-08/) | Gestión de materias primas | HU-07 |
 | | [HU-09](HU-09/) | Lotes de materia prima | HU-08 |
 | | [HU-10](HU-10/) | Consulta de inventario de MP | HU-08 |

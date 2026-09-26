@@ -11,7 +11,7 @@ Documento normativo. Cualquier código que no siga estas convenciones se rechaza
 | Tablas y columnas de BD | Español (tal como está en `db.sql`) | `materias_primas.stock_minimo` |
 | Rutas de API | Español | `/api/v1/materias-primas` |
 | Clases, métodos, variables Java | Español para el dominio, inglés para lo técnico | `MateriaPrimaService`, `findById` |
-| Componentes y servicios Angular | Español para el dominio | `materia-prima-list.component.ts` |
+| Componentes y servicios Angular | Español para el dominio | `materia-prima-lista.component.ts` |
 | Mensajes al usuario final | Español | `"El correo ya está registrado"` |
 | Comentarios y documentación | Español | — |
 | Códigos de error internos | Inglés, SCREAMING_SNAKE | `EMAIL_ALREADY_EXISTS` |
@@ -149,18 +149,24 @@ src/app/
 │   └── ui/
 │       ├── notificacion.service.ts  Wrapper de MatSnackBar
 │       └── confirmacion.service.ts  Wrapper de MatDialog para confirmar
+├── layout/
+│   ├── layout.component.{ts,html,scss}   Shell autenticado (barra + menú lateral)
+│   └── components/
+│       └── indicador-alertas/     MatBadge con /alertas/resumen (HU-27)
 ├── shared/
 │   ├── components/
 │   │   ├── tabla-paginada/       Tabla genérica con MatPaginator + MatSort
 │   │   ├── barra-filtros/
 │   │   ├── estado-chip/          Chip de color según estado
 │   │   └── confirmar-dialog/
+│   ├── directives/
+│   │   └── si-rol.directive.ts   *siRol — oculta elementos por rol (cosmético)
 │   ├── pipes/                    moneda, cantidad, estado-activo
 │   └── models/                   Interfaces compartidas (PageResponse, ApiError)
 └── features/
     └── <modulo>/
         ├── <modulo>.routes.ts
-        ├── services/<modulo>.service.ts
+        ├── <modulo>.service.ts
         ├── models/<modulo>.model.ts
         └── pages/
             ├── <modulo>-lista/

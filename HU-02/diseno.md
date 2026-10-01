@@ -28,6 +28,21 @@
 Menú `⋮` de cada fila: **Editar** · **Desactivar** (o **Activar**).
 **No hay opción de eliminar** (CA-05).
 
+Controles → parámetros de `GET /usuarios` (`especificacion.md` §2):
+
+| Control | Parámetro | Nota |
+|---|---|---|
+| Buscar nombre/correo | `busqueda` | Prefijo; vacío = no se envía |
+| Rol | `idRol` | "Todos" = no se envía; opciones de `GET /roles` |
+| Estado | `activo` | Todos / Activos (`true`) / Inactivos (`false`) |
+| Encabezado ordenable | `sort` | **Solo** `NOMBRE` y `CORREO` son ordenables; por defecto `nombre,asc` |
+| Paginador | `page`, `size` | Opciones de tamaño 10 / 20 / 50 (nunca más de 100) |
+
+**Fila del propio administrador:** la opción **Desactivar** no aparece y, al editar, el
+selector de rol está deshabilitado con la ayuda "No puede cambiar su propio rol". El
+backend lo rechaza igual (`AUTO_DESACTIVACION`, `AUTO_DEGRADACION`); la interfaz solo
+evita ofrecer una acción que siempre falla.
+
 ### Confirmación de desactivación
 
 ```
@@ -68,7 +83,7 @@ Administrador            Frontend                    Backend
      │                      │                           │ ¿es él mismo? → 409
      │                      │                           │ ¿último ADMIN? → 409
      │                      │                           │ UPDATE estado = 0
-     │                      │                           │ bitácora
+     │                      │                           │ (bitácora: HU-04, R-07)
      │                      │◄──────────────────────────┤ 200
      │  "Usuario desactivado"                           │
      │◄─────────────────────┤ (recarga el listado)      │
@@ -98,7 +113,16 @@ El formulario de edición reutiliza el de HU-01 **sin los campos de contraseña*
 |---|---|
 | Nombre | requerido, máx. 100 |
 | Correo | requerido, formato correo, máx. 100 |
-| Rol | requerido |
+| Rol | requerido; deshabilitado si se edita a sí mismo |
+
+Errores del servidor en la edición:
+
+| `code` | Dónde se muestra |
+|---|---|
+| `CORREO_DUPLICADO` | Bajo el campo correo |
+| `ROL_INEXISTENTE` | Bajo el campo rol + recargar catálogo de roles |
+| `ULTIMO_ADMIN` / `AUTO_DEGRADACION` | Bajo el campo rol, con el `message` del servidor |
+| `ULTIMO_ADMIN` / `AUTO_DESACTIVACION` (desactivar) | `MatSnackBar` con el `message`; el diálogo se cierra sin cambios |
 
 El campo de búsqueda no valida: cualquier texto es una búsqueda legítima, incluidos los
 caracteres especiales (que el backend escapa).

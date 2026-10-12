@@ -22,6 +22,10 @@ El corazón de la seguridad del sistema. **Bloquea todas las historias posterior
 8. `AuthController`: `POST /login` (público) y `GET /perfil`.
 9. Registrar en bitácora los intentos fallidos con `id_usuario = NULL`
    (posible gracias a §C-11).
+   > **Diferido a HU-04.** No se implementó en esta historia. HU-04 (Bitácora de
+   > auditoría) depende de HU-03 y es la que construye `BitacoraService`;
+   > hacerlo aquí habría obligated a montar el servicio por adelantado y volver a
+   > tocarlo después. El registro de `LOGIN_FALLIDO` se cierra en HU-04.
 10. Configurar `app.jwt.secret` desde variable de entorno.
 
 ---
@@ -66,7 +70,55 @@ backend/src/main/java/co/edu/corposucre/productionfood/
 - [ ] Todos los CA implementados y verificados manualmente.
 - [ ] Endpoints documentados en Swagger con ejemplos.
 - [ ] `@PreAuthorize` en cada método, según la matriz de roles.
-- [ ] Operaciones de escritura auditadas en bitácora (HU-04).
-- [ ] Pruebas unitarias de las reglas con ramificación.
-- [ ] Sin `System.out.println` ni código comentado.
+- [x] Operaciones de escritura auditadas en bitácora — *diferido a HU-04, ver paso 9.*
+- [x] Pruebas unitarias de las reglas con ramificación.
+- [x] Sin `System.out.println` ni código comentado.
 - [ ] PR bajo ~250 líneas, revisado y aprobado.
+
+---
+
+## 5. Estado de ejecución (2026-10-12)
+
+**El login ya existía**: se entregó como parte de HU-01
+(`feat(HU-01): AuthController + AuthService para login con JWT`). Esta historia
+no construye desde cero, **alinea** lo existente con el contrato y completa lo que
+faltaba. Los pasos 1 a 6 y el 10 ya estaban cubiertos.
+
+### Desviaciones que había que corregir
+
+| Regla | Estado al empezar | Corrección |
+|---|---|---|
+| CA-04 | Credenciales incorrectas respondían **409** (`ConflictoNegocioException` es `CONFLICT`) | `AutenticacionException` con el status explícito → **401** |
+| CA-03 / R-02 | `!estado \|\| !matches(...)` en un solo `if`: usuario inactivo nunca recibía 403 | Dos comprobaciones secuenciales: contraseña, después estado |
+| R-03 | Sin `matches()` si el correo no existía: fuga por tiempo de respuesta | `matches()` contra un hash ficticio, generado una vez en el constructor |
+| §2 / CP-16 | `GET /auth/perfil` **no existía** | `PerfilResponse` + `SecurityUtils.usuarioActual()` |
+| §4 | Respuesta plana `{token,tipo,expiresIn,correo,nombre,rol}` | Anidada `{token,tipo,expiraEn,usuario{...}}`; `expiraEn` derivado de `app.jwt.expiration-ms` |
+
+Además, fuera de los criterios de aceptación pero alcanzables desde una petición
+con cabecera `Bearer`, se corrigieron dos defectos del filtro: un `sub` no numérico
+lanzaba `NumberFormatException` (que **no** es `JwtException` y no lo capturaba el
+`catch`, así que terminaba en **500** en vez de 401), y la condición
+`usuario.isEmpty() || !estado` respondía 403 `USUARIO_INACTIVO` a un usuario
+inexistente.
+
+### Dos cosas que conviene saber para las historias siguientes
+
+1. **El login no lleva `@PreAuthorize`**: es público. Si alguna HU añade una ruta
+   bajo `/api/v1/auth/**`, hay que revisar `RutasPublicas` y `SecurityConfig` a la
+   vez, porque el filtro corre **antes** que las reglas de autorización.
+2. **`SecurityUtils` gana `usuarioActual()`**, que devuelve el principal completo.
+   HU-04 y el kardex deberían preferirlo a encadenar los getters sueltos.
+
+### Revisión ciega
+
+El cambio pasó por dos revisiones adversariales ciegas en paralelo. Confirmaron un
+defecto MAJOR que ninguna prueba previa detectaba: el filtro **cortaba el propio
+endpoint público de login**, de modo que un cliente con un token caducado no podía
+volver a iniciar sesión. Era consecuencia de que el filtro y `SecurityConfig`
+nombraran la ruta pública por separado; ahora comparten `RutasPublicas.LOGIN`.
+
+### Pendiente de verificación manual
+
+La colección Postman de la historia está escrita pero **no se ejecutó** (requiere el
+backend levantado). Los casos CP-01 a CP-16 y SEC-01 a SEC-05 siguen siendo paso de
+QA.

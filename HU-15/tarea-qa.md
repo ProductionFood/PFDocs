@@ -58,12 +58,14 @@ Obligatoria en **cada endpoint** de esta historia:
 
 ```sql
 -- 🔴 CP-13: las canceladas fuera del gasto ejecutado
-SELECT c.estado, COUNT(*) AS compras,
+SELECT c.estado, COUNT(DISTINCT c.id_compra) AS compras,
        COALESCE(SUM(d.cantidad * d.precio_unitario), 0) AS total
 FROM compras c LEFT JOIN detalle_compra d USING (id_compra)
 WHERE c.fecha BETWEEN '2026-09-01' AND '2026-09-30'
 GROUP BY c.estado;
 -- gastoEjecutado de la API = total de RECIBIDA, sin CANCELADA
+-- COUNT(DISTINCT) y no COUNT(*): el LEFT JOIN duplica la fila de la compra por cada
+-- línea, y COUNT(*) contaría una RECIBIDA con dos líneas como dos compras
 
 -- CP-04: el rango debe ser inclusivo
 SELECT id_compra, fecha FROM compras

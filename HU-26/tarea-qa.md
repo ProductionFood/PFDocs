@@ -111,6 +111,7 @@ FROM consumo_materia_prima c
   JOIN materias_primas mp USING (id_materia_prima)
   JOIN unidades_medida u ON u.id_unidad = mp.id_unidad
 WHERE pp.fecha_produccion BETWEEN '2026-09-01' AND '2026-09-30'
+  AND pp.estado = 'COMPLETADO'  -- R-05 y A-3/A-6: solo planes completados (sin cancelados ni en proceso)
 GROUP BY mp.id_materia_prima, mp.nombre, u.abreviatura
 ORDER BY ABS(desviacion_pct) DESC;
 -- Una desviación sostenida del +7% en harina indica receta mal calibrada
